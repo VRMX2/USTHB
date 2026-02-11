@@ -1,19 +1,20 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Styles } from '@/constants/Styles';
-import { Colors } from '@/constants/theme';
+import { BorderRadius, Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { TimetableService } from '@/services/timetable';
 import { TimetableSession } from '@/types';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const router = useRouter();
   const [nextSession, setNextSession] = useState<TimetableSession | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
   const loadData = async () => {
     const session = await TimetableService.getNextSession();
@@ -22,6 +23,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     loadData();
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   const onRefresh = async () => {
@@ -30,117 +36,136 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
+  const displayName = userProfile?.displayName || user?.displayName || 'Student';
+  const userInitial = displayName.charAt(0).toUpperCase();
+
   return (
-    <View style={[Styles.container, { backgroundColor: Colors.light.background, padding: 0 }]}>
+    <View style={[Styles.container, { backgroundColor: Colors.light.background }]}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 20 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={{ paddingBottom: 30 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.light.primary} />}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
           <View>
-            <Text style={styles.greeting}>Hello, {user?.displayName || 'Student'} 👋</Text>
-            <Text style={styles.subGreeting}>Ready to learn today?</Text>
+            <Text style={styles.greeting}>Welcome Back</Text>
+            <Text style={styles.userName}>{displayName}</Text>
+            {userProfile?.matricule && (
+              <Text style={styles.matricule}>{userProfile.matricule}</Text>
+            )}
           </View>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/profile' as any)}>
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>{user?.displayName?.charAt(0) || 'S'}</Text>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/profile' as any)} style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{userInitial}</Text>
             </View>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         {/* Next Class Card */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Next Class</Text>
+          <Text style={styles.sectionTitle}>Up Next</Text>
           {nextSession ? (
-            <View style={[Styles.card, styles.highlightCard]}>
-              <View style={styles.row}>
-                <View>
+            <View style={styles.nextClassCard}>
+              <View style={styles.nextClassHeader}>
+                <View style={styles.nextClassIconContainer}>
+                  <IconSymbol name="book.fill" size={24} color="#FFF" />
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.nextClassTitle}>{nextSession.moduleName}</Text>
                   <Text style={styles.nextClassTime}>
                     {nextSession.startTime} - {nextSession.endTime}
                   </Text>
-                  <View style={styles.badgeContainer}>
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{nextSession.type}</Text>
-                    </View>
-                    <Text style={styles.roomText}>📍 {nextSession.room}</Text>
-                  </View>
                 </View>
-                <View style={styles.iconCircle}>
-                  <IconSymbol name="book.fill" size={24} color="#FFF" />
+                <View style={styles.nextClassBadge}>
+                  <Text style={styles.nextClassBadgeText}>{nextSession.type}</Text>
                 </View>
+              </View>
+              <View style={styles.nextClassFooter}>
+                <IconSymbol name="location.fill" size={14} color="rgba(255,255,255,0.8)" />
+                <Text style={styles.nextClassRoom}>{nextSession.room}</Text>
               </View>
             </View>
           ) : (
-            <View style={Styles.card}>
-              <Text>No upcoming classes today.</Text>
+            <View style={[Styles.card, styles.emptyCard]}>
+              <IconSymbol name="checkmark.circle.fill" size={32} color={Colors.light.success} />
+              <Text style={styles.emptyCardText}>No classes today!</Text>
             </View>
           )}
         </View>
 
         {/* Stories Rail */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Stories (Mock)</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.storiesRail}>
+          <Text style={styles.sectionTitle}>Stories</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
             <TouchableOpacity style={styles.addStory}>
-              <IconSymbol name="plus" size={24} color="#FFF" />
+              <View style={styles.addStoryIcon}>
+                <IconSymbol name="plus" size={20} color={Colors.light.primary} />
+              </View>
+              <Text style={styles.storyLabel}>Add</Text>
             </TouchableOpacity>
-            {[1, 2, 3].map((i) => (
-              <View key={i} style={styles.storyContainer}>
+            {[1, 2, 3, 4].map((i) => (
+              <TouchableOpacity key={i} style={styles.storyItem}>
                 <View style={styles.storyRing}>
                   <Image
                     source={{ uri: `https://i.pravatar.cc/150?u=${i}` }}
-                    style={styles.storyAvatar}
+                    style={styles.storyImage}
                   />
                 </View>
-                <Text style={styles.storyName}>User {i}</Text>
-              </View>
+                <Text style={styles.storyLabel}>User {i}</Text>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
 
-        {/* Quick Actions */}
+        {/* Quick Actions Grid */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Access</Text>
-          <View style={styles.grid}>
-            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/timetable' as any)}>
-              <View style={[styles.actionIcon, { backgroundColor: '#E0F2FE' }]}>
-                <IconSymbol name="calendar" size={24} color={Colors.light.primary} />
+          <View style={styles.quickGrid}>
+            <TouchableOpacity style={styles.quickAction} onPress={() => router.push('/timetable' as any)}>
+              <View style={[styles.quickIcon, { backgroundColor: '#E8F4FD' }]}>
+                <IconSymbol name="calendar" size={26} color={Colors.light.primary} />
               </View>
-              <Text style={styles.actionText}>Timetable</Text>
+              <Text style={styles.quickText}>Timetable</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(tabs)/modules' as any)}>
-              <View style={[styles.actionIcon, { backgroundColor: '#FCE7F3' }]}>
-                <IconSymbol name="book.fill" size={24} color={Colors.light.accent} />
+            <TouchableOpacity style={styles.quickAction} onPress={() => router.push('/(tabs)/modules' as any)}>
+              <View style={[styles.quickIcon, { backgroundColor: '#F3E8FD' }]}>
+                <IconSymbol name="book.fill" size={26} color={Colors.light.secondary} />
               </View>
-              <Text style={styles.actionText}>Modules</Text>
+              <Text style={styles.quickText}>Modules</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(tabs)/chat' as any)}>
-              <View style={[styles.actionIcon, { backgroundColor: '#DCFCE7' }]}>
-                <IconSymbol name="message.fill" size={24} color={Colors.light.success} />
+            <TouchableOpacity style={styles.quickAction} onPress={() => router.push('/(tabs)/chat' as any)}>
+              <View style={[styles.quickIcon, { backgroundColor: '#E8FDF3' }]}>
+                <IconSymbol name="message.fill" size={26} color={Colors.light.success} />
               </View>
-              <Text style={styles.actionText}>Chat</Text>
+              <Text style={styles.quickText}>Chat</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/exams' as any)}>
-              <View style={[styles.actionIcon, { backgroundColor: '#FEF3C7' }]}>
-                <IconSymbol name="bell" size={24} color={Colors.light.warning} />
+            <TouchableOpacity style={styles.quickAction} onPress={() => router.push('/exams' as any)}>
+              <View style={[styles.quickIcon, { backgroundColor: '#FDF3E8' }]}>
+                <IconSymbol name="bell" size={26} color={Colors.light.warning} />
               </View>
-              <Text style={styles.actionText}>Exams</Text>
+              <Text style={styles.quickText}>Exams</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Announcements/Feed Preview */}
+        {/* Recent Updates */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Updates</Text>
-          <View style={Styles.card}>
-            <Text style={styles.updateTitle}>Exam Schedule Released</Text>
-            <Text style={styles.updateDate}>2 hours ago</Text>
-            <Text style={styles.updateText}>The tentative schedule for S1 exams is available on the department board.</Text>
+          <View style={styles.updateCard}>
+            <View style={styles.updateHeader}>
+              <View style={styles.updateIcon}>
+                <IconSymbol name="bell.fill" size={18} color={Colors.light.primary} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.updateTitle}>Exam Schedule Released</Text>
+                <Text style={styles.updateTime}>2 hours ago</Text>
+              </View>
+            </View>
+            <Text style={styles.updateBody}>The tentative schedule for S1 exams is now available on the department board.</Text>
           </View>
         </View>
 
@@ -153,170 +178,229 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-  },
-  subGreeting: {
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: '500',
     color: Colors.light.icon,
-    marginTop: 4,
+    letterSpacing: -0.2,
   },
-  avatarPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  userName: {
+    fontSize: 34,
+    fontWeight: '700',
+    color: Colors.light.text,
+    letterSpacing: 0.4,
+    marginTop: 2,
+  },
+  matricule: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.light.textSecondary,
+    marginTop: 2,
+  },
+  avatarContainer: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     color: '#FFF',
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '600',
   },
   section: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     color: Colors.light.text,
+    marginBottom: 14,
+    letterSpacing: 0.35,
+  },
+  nextClassCard: {
+    backgroundColor: Colors.light.primary,
+    borderRadius: BorderRadius.xl,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  nextClassHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  highlightCard: {
-    backgroundColor: Colors.light.primary,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  nextClassIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   nextClassTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 19,
+    fontWeight: '600',
     color: '#FFF',
-    marginBottom: 4,
+    letterSpacing: -0.4,
   },
   nextClassTime: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.9)',
-    marginBottom: 8,
-  },
-  badgeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  badge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  badgeText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  roomText: {
-    color: '#FFF',
-    fontSize: 12,
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  actionButton: {
-    width: '48%',
-    backgroundColor: Colors.light.card,
-    padding: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.light.text,
-  },
-  updateTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-  },
-  updateDate: {
-    fontSize: 12,
-    color: Colors.light.icon,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.85)',
     marginTop: 2,
-    marginBottom: 8,
   },
-  updateText: {
-    fontSize: 14,
-    color: Colors.light.text,
-    lineHeight: 20,
+  nextClassBadge: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
-  storiesRail: {
+  nextClassBadgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  nextClassFooter: {
     flexDirection: 'row',
+    alignItems: 'center',
+  },
+  nextClassRoom: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    marginLeft: 6,
+    fontWeight: '500',
+  },
+  emptyCard: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyCardText: {
+    fontSize: 17,
+    color: Colors.light.textSecondary,
+    marginTop: 8,
   },
   addStory: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.light.primary,
-    justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
-    borderWidth: 2,
-    borderColor: '#E0E7FF',
   },
-  storyContainer: {
+  addStoryIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.light.card,
+    borderWidth: 2,
+    borderColor: Colors.light.border,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  storyItem: {
     alignItems: 'center',
     marginRight: 16,
   },
   storyRing: {
-    padding: 2,
-    borderRadius: 32,
-    borderWidth: 2,
+    padding: 3,
+    borderRadius: 38,
+    borderWidth: 2.5,
     borderColor: Colors.light.primary,
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  storyAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  storyImage: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
   },
-  storyName: {
-    fontSize: 12,
+  storyLabel: {
+    fontSize: 13,
     color: Colors.light.text,
+    fontWeight: '500',
+  },
+  quickGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -6,
+  },
+  quickAction: {
+    width: '50%',
+    paddingHorizontal: 6,
+    marginBottom: 12,
+  },
+  quickIcon: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: BorderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  quickText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.light.text,
+    textAlign: 'center',
+    letterSpacing: -0.2,
+  },
+  updateCard: {
+    backgroundColor: Colors.light.card,
+    borderRadius: BorderRadius.lg,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  updateHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  updateIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E8F4FD',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  updateTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.light.text,
+    letterSpacing: -0.4,
+  },
+  updateTime: {
+    fontSize: 13,
+    color: Colors.light.icon,
+    marginTop: 2,
+  },
+  updateBody: {
+    fontSize: 15,
+    color: Colors.light.textSecondary,
+    lineHeight: 21,
   },
 });

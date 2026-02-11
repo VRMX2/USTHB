@@ -1,76 +1,75 @@
-import { Ionicons } from '@expo/vector-icons'; // Assuming Ionicons is available via expo-vector-icons
-import React from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
-import { Colors } from '../../constants/theme';
+import { BorderRadius, Colors, Spacing } from '@/constants/theme';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
 
 interface InputProps extends TextInputProps {
     label?: string;
     error?: string;
-    icon?: keyof typeof Ionicons.glyphMap;
+    containerStyle?: ViewStyle;
 }
 
-export function Input({ label, error, icon, style, ...props }: InputProps) {
+export const Input: React.FC<InputProps> = ({
+    label,
+    error,
+    containerStyle,
+    style,
+    ...props
+}) => {
+    const [isFocused, setIsFocused] = useState(false);
+
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, containerStyle]}>
             {label && <Text style={styles.label}>{label}</Text>}
-            <View style={[styles.inputContainer, error ? styles.errorBorder : null]}>
-                {icon && (
-                    <Ionicons
-                        name={icon}
-                        size={20}
-                        color={Colors.light.icon}
-                        style={styles.icon}
-                    />
-                )}
-                <TextInput
-                    style={[styles.input, style]}
-                    placeholderTextColor={Colors.light.icon}
-                    {...props}
-                />
-            </View>
+            <TextInput
+                style={[
+                    styles.input,
+                    isFocused && styles.inputFocused,
+                    error && styles.inputError,
+                    style,
+                ]}
+                placeholderTextColor={Colors.light.icon}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                {...props}
+            />
             {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: 16,
+        marginBottom: Spacing.lg,
     },
     label: {
-        fontSize: 14,
-        fontWeight: '500',
+        fontSize: 15,
+        fontWeight: '600',
         color: Colors.light.text,
-        marginBottom: 6,
-        marginLeft: 4,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#F3F4F6', // Light gray background
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: 'transparent',
-        height: 52,
-        paddingHorizontal: 12,
+        marginBottom: 8,
+        letterSpacing: -0.2,
     },
     input: {
-        flex: 1,
-        fontSize: 16,
+        backgroundColor: Colors.light.card,
+        borderRadius: BorderRadius.md,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        fontSize: 17,
         color: Colors.light.text,
-        height: '100%',
+        borderWidth: 1.5,
+        borderColor: Colors.light.border,
+        letterSpacing: -0.4,
     },
-    icon: {
-        marginRight: 10,
+    inputFocused: {
+        borderColor: Colors.light.primary,
+        borderWidth: 2,
     },
-    errorBorder: {
+    inputError: {
         borderColor: Colors.light.error,
-        borderWidth: 1,
     },
     errorText: {
-        marginTop: 4,
-        marginLeft: 4,
-        fontSize: 12,
+        fontSize: 13,
         color: Colors.light.error,
+        marginTop: 6,
+        marginLeft: 4,
     },
 });

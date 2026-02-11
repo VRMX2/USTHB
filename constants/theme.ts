@@ -1,71 +1,149 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Premium Theme Configuration
+ * iOS-inspired design with SF Pro Display font family
  */
 
-import { Platform } from 'react-native';
+export const Fonts = {
+  regular: 'System',
+  medium: 'System',
+  semibold: 'System',
+  bold: 'System',
+  // These will use the system font (San Francisco on iOS, Roboto on Android)
+  // For custom fonts, you would use expo-font to load SF Pro Display
+};
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+export const FontSizes = {
+  xs: 12,
+  sm: 14,
+  base: 16,
+  lg: 18,
+  xl: 20,
+  '2xl': 24,
+  '3xl': 28,
+  '4xl': 32,
+  '5xl': 40,
+};
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#FFFFFF',
-    tint: '#2563EB', // Royal Blue
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: '#2563EB',
-    primary: '#2563EB',
-    secondary: '#F59E0B',
-    accent: '#7C3AED',
+    // Primary Brand Colors - Modern Blue
+    primary: '#007AFF', // iOS Blue
+    primaryDark: '#0051D5',
+    primaryLight: '#4DA2FF',
+
+    // Secondary & Accent
+    secondary: '#5856D6', // iOS Purple
+    accent: '#FF2D55', // iOS Pink
+    success: '#34C759', // iOS Green
+    warning: '#FF9500', // iOS Orange
+    error: '#FF3B30', // iOS Red
+
+    // Neutral Colors
+    background: '#F2F2F7', // iOS Light Gray Background
     card: '#FFFFFF',
-    border: '#E5E7EB',
-    error: '#EF4444',
-    success: '#10B981',
-    warning: '#F59E0B',
-    glass: 'rgba(255, 255, 255, 0.8)',
+    border: '#E5E5EA',
+
+    // Text Colors
+    text: '#000000',
+    textSecondary: '#3C3C43',
+    icon: '#8E8E93',
+
+    // Glassmorphism
+    glass: 'rgba(255, 255, 255, 0.7)',
+    glassBorder: 'rgba(255, 255, 255, 0.3)',
+
+    // Shadows
+    shadow: 'rgba(0, 0, 0, 0.1)',
+
+    // Tab Bar
+    tint: '#007AFF',
+    tabIconDefault: '#8E8E93',
+    tabIconSelected: '#007AFF',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#0F172A', // Slate 900
-    tint: '#60A5FA', // Blue 400
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: '#60A5FA',
-    primary: '#60A5FA',
-    secondary: '#FBBF24',
-    accent: '#8B5CF6',
-    card: '#1E293B', // Slate 800
-    border: '#334155',
-    error: '#F87171',
-    success: '#34D399',
-    warning: '#FBBF24',
-    glass: 'rgba(15, 23, 42, 0.8)',
+    // Primary Brand Colors
+    primary: '#0A84FF', // iOS Blue (Dark Mode)
+    primaryDark: '#0051D5',
+    primaryLight: '#64B5F6',
+
+    // Secondary & Accent
+    secondary: '#5E5CE6', // iOS Purple (Dark)
+    accent: '#FF375F', // iOS Pink (Dark)
+    success: '#32D74B', // iOS Green (Dark)
+    warning: '#FF9F0A', // iOS Orange (Dark)
+    error: '#FF453A', // iOS Red (Dark)
+
+    // Neutral Colors
+    background: '#000000',
+    card: '#1C1C1E',
+    border: '#38383A',
+
+    // Text Colors
+    text: '#FFFFFF',
+    textSecondary: '#EBEBF5',
+    icon: '#8E8E93',
+
+    // Glassmorphism
+    glass: 'rgba(28, 28, 30, 0.7)',
+    glassBorder: 'rgba(255, 255, 255, 0.1)',
+
+    // Shadows
+    shadow: 'rgba(0, 0, 0, 0.3)',
+
+    // Tab Bar
+    tint: '#0A84FF',
+    tabIconDefault: '#8E8E93',
+    tabIconSelected: '#0A84FF',
   },
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  '2xl': 24,
+  '3xl': 32,
+  '4xl': 40,
+};
+
+export const BorderRadius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  '2xl': 24,
+  full: 9999,
+};
+
+export const Shadows = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 5,
   },
-});
+  xl: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+};

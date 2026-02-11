@@ -1,15 +1,19 @@
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/firebaseConfig';
+import { UserService } from '@/services/user';
+import { UserProfile } from '@/types';
+import { User, onAuthStateChanged } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../firebaseConfig';
 
 interface AuthContextType {
     user: User | null;
+    userProfile: UserProfile | null;
     loading: boolean;
     isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
+    userProfile: null,
     loading: true,
     isAdmin: false,
 });
@@ -18,20 +22,32 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
+
             if (user) {
-                // Here we would check for custom claims or admin role in Firestore
-                // const idTokenResult = await user.getIdTokenResult();
-                // setIsAdmin(!!idTokenResult.claims.admin);
-                setIsAdmin(false); // Placeholder
+                try {
+                    // Load user profile from Firestore
+                    const profile = await UserService.getUserProfile(user.uid);
+                    setUserProfile(profile);
+
+                    // Check if user is admin
+                    setIsAdmin(profile?.role === 'admin');
+                } catch (error) {
+                    console.error('Error loading user profile:', error);
+                    setUserProfile(null);
+                    setIsAdmin(false);
+                }
             } else {
+                setUserProfile(null);
                 setIsAdmin(false);
             }
+
             setLoading(false);
         });
 
@@ -39,7 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, loading, isAdmin }}>
+        <AuthContext.Provider value={{ user, userProfile, loading, isAdmin }}>
             {children}
         </AuthContext.Provider>
     );

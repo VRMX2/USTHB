@@ -1,20 +1,37 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-// import { getAnalytics } from "firebase/analytics";
+import { Platform } from 'react-native';
 
-// Initialize Firebase
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "API_KEY_PLACEHOLDER",
+    apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     authDomain: "usthb-student-app-vrmx.firebaseapp.com",
     projectId: "usthb-student-app-vrmx",
     storageBucket: "usthb-student-app-vrmx.firebasestorage.app",
-    messagingSenderId: "SENDER_ID_PLACEHOLDER",
-    appId: "APP_ID_PLACEHOLDER"
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcdef1234567890abcdef"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+
+// Initialize Auth with persistence for React Native
+let auth;
+if (Platform.OS === 'web') {
+    auth = getAuth(app);
+} else {
+    auth = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage)
+    });
+}
+
+// Initialize Firestore
+const db = getFirestore(app);
+
+// Initialize Storage
+const storage = getStorage(app);
+
+export { app, auth, db, storage };

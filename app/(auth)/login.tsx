@@ -1,12 +1,11 @@
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { BorderRadius, Colors, Shadows } from '@/constants/theme';
+import { auth } from '@/firebaseConfig';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Styles } from '../../constants/Styles';
-import { Colors } from '../../constants/theme';
-import { auth } from '../../firebaseConfig';
+import { Alert, Animated, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -14,6 +13,15 @@ export default function LoginScreen() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const fadeAnim = useState(new Animated.Value(0))[0];
+
+    React.useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+        }).start();
+    }, []);
 
     const handleLogin = async () => {
         if (!matricule || !password) {
@@ -25,15 +33,8 @@ export default function LoginScreen() {
         setError('');
 
         try {
-            // Map matricule to email format
             const email = `${matricule}@student.usthb.dz`;
-            console.log('Attempting login with:', email);
-
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            console.log('User signed in:', userCredential.user.uid);
-
-            // Navigate to tabs upon success (handled by AuthContext ideally, or manual push)
-            // router.replace('/(tabs)'); 
+            await signInWithEmailAndPassword(auth, email, password);
         } catch (err: any) {
             console.error('Login error:', err);
             let message = 'Failed to sign in. Please check your credentials.';
@@ -48,108 +49,137 @@ export default function LoginScreen() {
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={Styles.container}
-        >
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.header}>
-                    <Image
-                        source={require('../../assets/images/icon.png')} // Make sure this exists
-                        style={styles.logo}
-                        resizeMode="contain"
-                    />
-                    <Text style={styles.title}>RSD Masters Companion</Text>
-                    <Text style={styles.subtitle}>Sign in with your Matricule</Text>
-                </View>
+        <View style={styles.container}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+                        {/* Header */}
+                        <View style={styles.header}>
+                            <View style={styles.logoContainer}>
+                                <Text style={styles.logoText}>RSD</Text>
+                            </View>
+                            <Text style={styles.title}>Welcome Back</Text>
+                            <Text style={styles.subtitle}>Sign in to continue</Text>
+                        </View>
 
-                <View style={styles.form}>
-                    <Input
-                        label="Matricule"
-                        placeholder="e.g., 191931045..."
-                        value={matricule}
-                        onChangeText={setMatricule}
-                        keyboardType="numeric"
-                        autoCapitalize="none"
-                        icon="school-outline"
-                        error={error ? ' ' : undefined} // Just to trigger red border if needed, or specific field error
-                    />
+                        {/* Form */}
+                        <View style={styles.form}>
+                            <Input
+                                label="Matricule"
+                                placeholder="Enter your matricule"
+                                value={matricule}
+                                onChangeText={setMatricule}
+                                autoCapitalize="none"
+                                keyboardType="default"
+                            />
 
-                    <Input
-                        label="Password"
-                        placeholder="Enter your password"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry
-                        icon="lock-closed-outline"
-                    />
+                            <Input
+                                label="Password"
+                                placeholder="Enter your password"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                                autoCapitalize="none"
+                            />
 
-                    {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                            {error ? (
+                                <View style={styles.errorContainer}>
+                                    <Text style={styles.errorText}>{error}</Text>
+                                </View>
+                            ) : null}
 
-                    <Button
-                        title="Sign In"
-                        onPress={handleLogin}
-                        loading={loading}
-                        variant="primary"
-                    />
+                            <Button
+                                title={loading ? 'Signing in...' : 'Sign In'}
+                                onPress={handleLogin}
+                                loading={loading}
+                                disabled={loading}
+                                size="large"
+                                style={{ marginTop: 8 }}
+                            />
+                        </View>
 
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>First time? Use the password from your certificate.</Text>
-                        <Button
-                            title="Help / Support"
-                            onPress={() => Alert.alert('Support', 'Contact admin at admin@usthb.dz')}
-                            variant="ghost"
-                        />
-                    </View>
-                </View>
-            </ScrollView>
-        </KeyboardAvoidingView>
+                        {/* Footer */}
+                        <Text style={styles.footerText}>
+                            RSD Masters Student Companion
+                        </Text>
+                    </Animated.View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: Colors.light.background,
+    },
     scrollContent: {
         flexGrow: 1,
         justifyContent: 'center',
-        paddingBottom: 20,
+        paddingHorizontal: 24,
+        paddingVertical: 40,
+    },
+    content: {
+        flex: 1,
+        justifyContent: 'center',
     },
     header: {
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: 48,
     },
-    logo: {
-        width: 100,
-        height: 100,
-        marginBottom: 20,
-        borderRadius: 20,
+    logoContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: Colors.light.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 24,
+        ...Shadows.lg,
+    },
+    logoText: {
+        fontSize: 32,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        letterSpacing: 1,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
+        fontSize: 34,
+        fontWeight: '700',
         color: Colors.light.text,
-        textAlign: 'center',
         marginBottom: 8,
+        letterSpacing: 0.4,
     },
     subtitle: {
-        fontSize: 16,
-        color: Colors.light.icon,
-        textAlign: 'center',
+        fontSize: 17,
+        color: Colors.light.textSecondary,
+        letterSpacing: -0.4,
     },
     form: {
-        width: '100%',
+        marginBottom: 32,
+    },
+    errorContainer: {
+        backgroundColor: '#FFEBEE',
+        borderRadius: BorderRadius.md,
+        padding: 12,
+        marginBottom: 16,
     },
     errorText: {
         color: Colors.light.error,
+        fontSize: 15,
         textAlign: 'center',
-        marginBottom: 16,
-    },
-    footer: {
-        marginTop: 24,
-        alignItems: 'center',
     },
     footerText: {
+        fontSize: 13,
         color: Colors.light.icon,
-        fontSize: 14,
-        marginBottom: 12,
+        textAlign: 'center',
     },
 });
