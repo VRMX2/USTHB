@@ -22,7 +22,7 @@ export interface Resource {
     id: string;
     moduleId: string;
     title: string;
-    type: 'pdf' | 'video' | 'link';
+    type: 'pdf' | 'video' | 'link' | 'pptx' | 'docx' | 'image' | 'other';
     url: string;
     date: string; // ISO string
 }

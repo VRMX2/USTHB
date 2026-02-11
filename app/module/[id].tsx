@@ -1,16 +1,18 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Styles } from '@/constants/Styles';
+import { Colors } from '@/constants/theme';
+import { ModulesService } from '@/services/modules';
+import { StorageService } from '@/services/storage';
+import { Module, Resource } from '@/types';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Styles } from '../../constants/Styles';
-import { Colors } from '../../constants/theme';
-import { ModulesService } from '../../services/modules';
-import { Module } from '../../types';
 
 export default function ModuleDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const [module, setModule] = useState<Module | null>(null);
+    const [resources, setResources] = useState<Resource[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'resources' | 'announcements'>('resources');
 
@@ -23,7 +25,9 @@ export default function ModuleDetailsScreen() {
     const loadModule = async () => {
         try {
             const data = await ModulesService.getModuleById(id!);
+            const res = await StorageService.getModuleResources(id!);
             setModule(data || null);
+            setResources(res);
         } catch (e) {
             console.error(e);
         } finally {
@@ -78,15 +82,28 @@ export default function ModuleDetailsScreen() {
                 {activeTab === 'resources' ? (
                     <View>
                         <Text style={styles.sectionHeader}>Course Materials</Text>
-                        {/* Placeholder for resources list */}
-                        <View style={Styles.card}>
-                            <Text style={{ color: Colors.light.icon }}>No resources available yet.</Text>
-                        </View>
+                        {resources.length > 0 ? (
+                            resources.map(resource => (
+                                <TouchableOpacity key={resource.id} style={styles.resourceCard} onPress={() => console.log('Download', resource.url)}>
+                                    <View style={styles.resourceIcon}>
+                                        <IconSymbol name="doc.fill" size={24} color={Colors.light.primary} />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.resourceTitle}>{resource.title}</Text>
+                                        <Text style={styles.resourceType}>{resource.type.toUpperCase()}</Text>
+                                    </View>
+                                    <IconSymbol name="arrow.down.circle" size={24} color={Colors.light.icon} />
+                                </TouchableOpacity>
+                            ))
+                        ) : (
+                            <View style={Styles.card}>
+                                <Text style={{ color: Colors.light.icon }}>No resources available yet.</Text>
+                            </View>
+                        )}
                     </View>
                 ) : (
                     <View>
                         <Text style={styles.sectionHeader}>Latest Updates</Text>
-                        {/* Placeholder for announcements */}
                         <View style={Styles.card}>
                             <Text style={{ color: Colors.light.icon }}>No announcements yet.</Text>
                         </View>
@@ -149,5 +166,37 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 12,
         color: Colors.light.text,
+    },
+    resourceCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: Colors.light.card,
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    resourceIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#E0F2FE',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    resourceTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: Colors.light.text,
+    },
+    resourceType: {
+        fontSize: 12,
+        color: Colors.light.icon,
+        marginTop: 2,
     },
 });
